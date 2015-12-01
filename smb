@@ -5,7 +5,36 @@ import re
 import os
 import subprocess
 
-# def smbclient(config):
+def smbclient(config, host, directory):
+    # Hostが見つかったフラグ
+    hostFound = False
+    userFound = False
+
+    # 入力されたホスト名の項を探す
+    for i in range(len(config)):
+        # "Host"と入力されたホスト名が同じ行に書かれていたら
+        if config[i].find("Host") >= 0 and config[i].find(host) >= 0:
+            hostFound = True
+            # リストの一つ先からHostNameに示されたホスト名を抽出
+            hostname = re.sub("( +|\t)HostName( +)|\t", "", config[i+1]).rstrip('\n')
+            # パスを生成
+            path = "/".join(["/", hostname, directory])
+
+            # リストの2つ先に"User" が定義されていたら
+            try:
+                if config[i+2].find("User") >= 0:
+                    userFound = True
+                    # Userに示されたユーザ名を抽出
+                    username = re.sub("( +|\t)User( +|\t)", "", config[i+2]).rstrip('\n')
+            except IndexError:
+                pass
+
+            # smbclientを叩く
+            if userFound == True:
+                subprocess.call(['smbclient', path, '-U', username])
+            else:
+                subprocess.call(['smbclient', path])
+    return hostFound
 
 # 引数のチェック
 if len(sys.argv) < 3:
@@ -23,38 +52,8 @@ config = configFile.readlines()
 configFile.close()
 
 # ホスト名を読み込む
-host = sys.argv[1]
+host = sys.argv[1].rstrip('\n')
 directory = sys.argv[2].rstrip('\n')
 
-# Hostが見つかったフラグ
-hostFound = False
-userFound = False
-
-# 入力されたホスト名の項を探す
-for i in range(len(config)):
-
-    # "Host"と入力されたホスト名が同じ行に書かれていたら
-    if config[i].find("Host") >= 0 and config[i].find(host) >= 0:
-        hostFound = True
-        # HostNameに示されたホスト名を抽出
-        hostname = re.sub("( +|\t)HostName( +)|\t", "", config[i+1]).rstrip('\n')
-        # パスを生成
-        path = "/".join(["/", hostname, directory])
-
-        # "User" が定義されていたら
-        try:
-            if config[i+2].find("User") >= 0:
-                userFound = True
-                # Userに示されたユーザ名を抽出
-                username = re.sub("( +|\t)User( +|\t)", "", config[i+2]).rstrip('\n')
-        except IndexError:
-            pass
-
-        # smbclientを叩く
-        if userFound == True:
-            subprocess.call(['smbclient', path, '-U', username])
-        else:
-            subprocess.call(['smbclient', path])
-
-if hostFound == False:
+if smbclient(config, host, directory) == False:
     print("Host Unknown")
