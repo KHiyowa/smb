@@ -55,5 +55,8 @@ configFile.close()
 host = sys.argv[1].rstrip('\n')
 directory = sys.argv[2].rstrip('\n')
 
-if smbclient(config, host, directory) == False:
-    print("Host Unknown")
+try:
+    if smbclient(config, host, directory) == False:
+        print("Host Unknown")
+except KeyboardInterrupt:
+    pass
