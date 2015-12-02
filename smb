@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/local/bin/python3.5
 
 import sys
 import re
@@ -13,7 +13,7 @@ def smbclient(config, host, directory):
     # 入力されたホスト名の項を探す
     for i in range(len(config)):
         # "Host"と入力されたホスト名が同じ行に書かれていたら
-        if config[i].find("Host") >= 0 and config[i].find(host) >= 0:
+        if re.search("Host( +|\t)", config[i]) != None and config[i].find(host + "\n") >= 0:
             hostFound = True
             # リストの一つ先からHostNameに示されたホスト名を抽出
             hostname = re.sub("( +|\t)HostName( +)|\t", "", config[i+1]).rstrip('\n')
